@@ -3,12 +3,17 @@ package main
 import (
   "flag"
 	"net/http"
+  "io"
 	"net/http/cookiejar"
 )
 
 var (
   token = flag.String("session", "", "Advent of Code session token")
 )
+
+type Day struct {
+  PuzzleInput io.ReadCloser
+}
 
 type Solver interface {
   Solve()
@@ -48,9 +53,8 @@ func main() {
 		panic(err)
 	}
 
-  d := Day1{
-    PuzzleInput: resp.Body,
-  }
+  var d Day1
+  d.PuzzleInput = resp.Body
 
   d.Solve()
 }

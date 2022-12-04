@@ -5,11 +5,10 @@ import (
 	"log"
 	"sort"
 	"strconv"
-  "io"
 )
 
 type Day1 struct {
-  PuzzleInput io.ReadCloser
+  Day
 }
 
 func (d Day1) Solve() {
