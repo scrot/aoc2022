@@ -38,7 +38,7 @@ func main() {
 
 	req, err := http.NewRequest(
 		http.MethodGet,
-		"https://adventofcode.com/2022/day/1/input",
+		"https://adventofcode.com/2022/day/2/input",
 		nil,
 	)
 
@@ -53,7 +53,7 @@ func main() {
 		panic(err)
 	}
 
-  var d Day1
+  var d Day2
   d.PuzzleInput = resp.Body
 
   d.Solve()
