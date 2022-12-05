@@ -20,7 +20,7 @@ func (d Day3) Solve() {
 	var groupSum int
 
 	counter := 0
-	var group []string
+	var group [3]string
 
 	for buf.Scan() {
 		l := buf.Text()
@@ -30,15 +30,15 @@ func (d Day3) Solve() {
 		sum += prios[item]
 
 		// Part II
-    counter++
-    group = append(group, l)
-    
-    if counter == 3 {
-      item := findBadgeItem(group)
-      groupSum += prios[item]
-      counter = 0
-      group = []string{}
-    }
+		group[counter] = l
+		counter++
+
+		if counter == 3 {
+			item := findBadgeItem(group)
+			groupSum += prios[item]
+			group = [3]string{}
+			counter = 0
+		}
 	}
 
 	log.Printf("Answer Part I: %d", sum)
@@ -50,41 +50,33 @@ func findDuplicateItem(l string) rune {
 	mid := len(l) / 2
 	leftCompartment := l[:mid]
 	rightCompartment := l[mid:]
-
 	match := strings.IndexAny(leftCompartment, rightCompartment)
 	// log.Printf("%c appears in %s and %s\n", rune(l[match]), leftCompartment, rightCompartment)
 	return rune(l[match])
 }
 
-func findBadgeItem(g []string) rune {
-  bucket := make(map[rune]int)
-  for _, sack := range g {
-    var added string
-    for _, c := range sack {
-      if !strings.ContainsRune(added, c) {
-        bucket[c]++
-        added += string(c)
-      }
-    }
-  }
-  
-  var match []rune
-  for key, value := range bucket {
-    if value == 3 {
-      match = append(match, key)
-    }
-  }
-	log.Printf("%c appears in %v (%d)\n", match, g, len(g))
-
-	return match[0]
-}
-
-func prettyPrintPriorities(prios map[rune]int) {
-	for k, v := range prios {
-		log.Printf("%c, %d\n", k, v)
+func findBadgeItem(group [3]string) rune {
+	bucket := make(map[rune]int)
+	for _, sack := range group {
+    added := make(map[rune]bool)
+		for _, c := range sack {
+			if !added[c] {
+				bucket[c]++
+				added[c] = true
+			}
+		}
 	}
-	log.Printf("Length: %d\n", len(prios))
 
+	var match rune
+	for key, value := range bucket {
+		if value == 3 {
+			match = key
+      break
+		}
+	}
+	// log.Printf("%c appears in %v (%d)\n", match, group, len(group))
+
+	return match
 }
 
 func generatePriorities() map[rune]int {
