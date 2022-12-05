@@ -1,4 +1,4 @@
-package main
+package puzzle
 
 import (
 	"bufio"
@@ -12,8 +12,8 @@ type Day1 struct {
 }
 
 func (d Day1) Solve() {
-	buf := bufio.NewScanner(d.PuzzleInput)
-  defer d.PuzzleInput.Close()
+	buf := bufio.NewScanner(d.Dataset)
+  defer d.Dataset.Close()
 
 	var curCal int
 	var topCals []int

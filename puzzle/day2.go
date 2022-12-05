@@ -1,4 +1,4 @@
-package main
+package puzzle
 
 import (
 	"bufio"
@@ -34,8 +34,8 @@ func(d Day2) Solve() {
     'Z': win,
   }
 
-  buf := bufio.NewScanner(d.PuzzleInput)
-  defer d.PuzzleInput.Close()
+  buf := bufio.NewScanner(d.Dataset)
+  defer d.Dataset.Close()
 
   var totalScore int
   var totalScoreAlt int
@@ -47,13 +47,13 @@ func(d Day2) Solve() {
     meMove := me[l[2]]
     score := gameOutcome(meMove, elfMove) + movePoints(meMove)
     totalScore += score
-    log.Printf("My move %s, elf move %s (score %d, total %d)\n", meMove, elfMove, score, totalScore)
+    // log.Printf("My move %s, elf move %s (score %d, total %d)\n", meMove, elfMove, score, totalScore)
 
     outcome := res[l[2]]
     meMoveAlt := inferMove(elfMove, outcome)
     scoreAlt := gameOutcome(meMoveAlt, elfMove) + movePoints(meMoveAlt)
     totalScoreAlt += scoreAlt
-    log.Printf("Elf move %s, required outcome %d, my move %s (score %d, total %d)\n", elfMove, outcome, meMoveAlt, scoreAlt, totalScoreAlt)
+    // log.Printf("Elf move %s, required outcome %d, my move %s (score %d, total %d)\n", elfMove, outcome, meMoveAlt, scoreAlt, totalScoreAlt)
 
   }
 
