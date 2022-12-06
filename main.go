@@ -23,7 +23,7 @@ var (
 func main() {
   flag.Parse()
   
-  d := puzzles[4] 
+  d := puzzles[5] 
   d.FetchDataSetByToken(*token)
   d.Solve()
 }
