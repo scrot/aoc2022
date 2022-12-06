@@ -11,16 +11,19 @@ var (
 )
 
 var (
-  day1 = puzzle.Day1{Day: puzzle.NewDay("https://adventofcode.com/2022/day/1/input")}
-  day2 = puzzle.Day2{Day: puzzle.NewDay("https://adventofcode.com/2022/day/2/input")}
-  day3 = puzzle.Day3{Day: puzzle.NewDay("https://adventofcode.com/2022/day/3/input")}
-  day4 = puzzle.Day4{Day: puzzle.NewDay("https://adventofcode.com/2022/day/4/input")}
+  puzzles = map[int]puzzle.Solver {
+    1: puzzle.Day1{Day: puzzle.NewDay("https://adventofcode.com/2022/day/1/input")},
+    2: puzzle.Day2{Day: puzzle.NewDay("https://adventofcode.com/2022/day/2/input")},
+    3: puzzle.Day3{Day: puzzle.NewDay("https://adventofcode.com/2022/day/3/input")},
+    4: puzzle.Day4{Day: puzzle.NewDay("https://adventofcode.com/2022/day/4/input")},
+    5: puzzle.Day5{Day: puzzle.NewDay("https://adventofcode.com/2022/day/5/input")},
+  }
 )
 
 func main() {
   flag.Parse()
   
-  d := day4 
+  d := puzzles[4] 
   d.FetchDataSetByToken(*token)
   d.Solve()
 }

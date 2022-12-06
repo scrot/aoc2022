@@ -8,7 +8,7 @@ import (
 )
 
 type Day1 struct {
-  Day
+  *Day
 }
 
 func (d Day1) Solve() {

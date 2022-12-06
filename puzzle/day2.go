@@ -6,7 +6,7 @@ import (
 )
 
 type Day2 struct {
-  Day
+  *Day
 }
 
 const (
