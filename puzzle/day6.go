@@ -1,8 +1,9 @@
 package puzzle
 
 import (
-	"bufio"
+	"io"
 	"log"
+	"math/bits"
 )
 
 type Day6 struct {
@@ -10,52 +11,34 @@ type Day6 struct {
 }
 
 func (d Day6) Solve() {
-	buf := bufio.NewScanner(d.Dataset)
+	buf, _ := io.ReadAll(d.Dataset)
 	defer d.Dataset.Close()
-	buf.Split(bufio.ScanRunes)
 
-	var sFrame, mFrame string
-	var foundS, foundM bool
-	var index int
+	pkg := markerAt(&buf, 4)
+	msg := markerAt(&buf, 14)
 
-	for buf.Scan() {
-		r := buf.Text()
-		index++
-		// log.Printf("%d: %s", index, r)
+	log.Printf("Answer part I: %d\n", pkg)
+	log.Printf("Answer part II: %d\n", msg)
 
-		if len(sFrame) < 4 {
-			sFrame += r
-		} else {
-			if !foundS {
-				sFrame = sFrame[1:] + r
-				if !containsDuplicates(sFrame) {
-					log.Printf("Answer part I: %d (%s)\n", index, sFrame)
-					foundS = true
-				}
-			}
-		}
-
-		if len(mFrame) < 14 {
-			mFrame += r
-		} else {
-			if !foundM {
-				mFrame = mFrame[1:] + r
-				if !containsDuplicates(mFrame) {
-					log.Printf("Answer part II: %d (%s)\n", index, mFrame)
-					foundM = true
-				}
-			}
-		}
-	}
 }
 
-func containsDuplicates(frame string) bool {
-	for i, r := range frame {
-		for j := i + 1; j < len(frame); j++ {
-			if rune(frame[j]) == r {
-				return true
-			}
+func markerAt(buf *[]byte, l int) int {
+	for i := 0; i < len(*buf)-l-1; i++ {
+		// Must be as may bits as alphabet
+		var frame uint32
+
+		// Shift bit left char - 'a' positions
+		// if double char the OR operation flips bit
+		for j := 0; j < l; j++ {
+			frame |= 1 << ((*buf)[i+j] - 'a')
+		}
+
+		// log.Printf("%b \n", frame)
+
+		// Count unique characters in frame
+		if bits.OnesCount32(frame) == l {
+			return i + l
 		}
 	}
-	return false
+	return 0
 }
