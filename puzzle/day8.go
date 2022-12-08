@@ -1,6 +1,7 @@
 package puzzle
 
 import (
+	"bufio"
 	"io"
 	"log"
 	"strconv"
@@ -12,10 +13,15 @@ type Day8 struct {
 }
 
 func (d Day8) Solve() {
-	buf, _ := io.ReadAll(d.Dataset)
+  s := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 
-	grid := newGrid(string(buf))
+  var buf []string
+  for s.Scan() {
+    buf = append(buf, s.Text())
+  }
+
+	grid := newGrid(buf)
 
 	total, score := iterateInnerTrees(grid)
 	total += len(grid)*2 + len(grid[0])*2 - 4
@@ -24,13 +30,12 @@ func (d Day8) Solve() {
 	log.Printf("Answer part II: %d", score)
 }
 
-func newGrid(buf string) [][]int {
-	lines := strings.Split(string(buf), "\n")
-	grid := make([][]int, len(lines)-1)
+func newGrid(buf []string) [][]int {
+	grid := make([][]int, len(buf)-1)
 
-	for r := 0; r < len(lines); r++ {
-		for c := 0; c < len(lines[r]); c++ {
-			f, _ := strconv.Atoi(string(lines[r][c]))
+	for r := 0; r < len(buf); r++ {
+		for c := 0; c < len(buf[r]); c++ {
+			f, _ := strconv.Atoi(string(buf[r][c]))
 			grid[r] = append(grid[r], f)
 		}
 	}
