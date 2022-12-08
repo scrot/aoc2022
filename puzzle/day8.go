@@ -17,11 +17,11 @@ func (d Day8) Solve() {
 
 	grid := newGrid(string(buf))
 
-	total := iterateInnerTrees(grid)
+	total, score := iterateInnerTrees(grid)
 	total += len(grid)*2 + len(grid[0])*2 - 4
 
 	log.Printf("Answer part I: %d", total)
-	log.Printf("Answer part II: %d", 0)
+	log.Printf("Answer part II: %d", score)
 }
 
 func newGrid(buf string) [][]int {
@@ -38,56 +38,71 @@ func newGrid(buf string) [][]int {
 	return grid
 }
 
-func iterateInnerTrees(grid [][]int) int {
+func iterateInnerTrees(grid [][]int) (int, int) {
 	var count int
+  var highScore int
 
 	for row := 1; row < len(grid)-1; row++ {
 		for col := 1; col < len(grid[row])-1; col++ {
-			if visibleNorth(grid, row, col) ||
-				visibleSouth(grid, row, col) ||
-				visibleWest(grid, row, col) ||
-				visibleEast(grid, row, col) {
-				// log.Printf("Tree (%d, %d) with height %d is visible", row, col, grid[row][col])
+      nd, n := visibleNorth(grid, row, col)
+			sd, s := visibleSouth(grid, row, col)
+			wd, w := visibleWest(grid, row, col)
+			ed, e :=visibleEast(grid, row, col)
+
+      score := nd * sd * wd * ed
+      if score > highScore {
+        highScore = score
+      }
+
+      if n || s || w || e {
 				count++
 			}
 		}
 	}
 
-	return count
+	return count, highScore
 }
 
-func visibleEast(grid [][]int, r, c int) bool {
+func visibleEast(grid [][]int, r, c int) (int, bool) {
+  var dist int
 	for col := c - 1; col >= 0; col-- {
+    dist++
 		if grid[r][c] <= grid[r][col] {
-			return false
+			return dist, false
 		}
 	}
-	return true
+	return dist, true
 }
 
-func visibleWest(grid [][]int, r, c int) bool {
+func visibleWest(grid [][]int, r, c int) (int, bool) {
+  var dist int
 	for col := c + 1; col < len(grid[c]); col++ {
+    dist++
 		if grid[r][c] <= grid[r][col] {
-			return false
+			return dist, false
 		}
 	}
-	return true
+	return dist,true
 }
 
-func visibleNorth(grid [][]int, r, c int) bool {
+func visibleNorth(grid [][]int, r, c int) (int, bool) {
+  var dist int
 	for row := r - 1; row >= 0; row-- {
+    dist++
 		if grid[r][c] <= grid[row][c] {
-			return false
+			return dist, false
 		}
 	}
-	return true
+	return dist, true
 }
 
-func visibleSouth(grid [][]int, r, c int) bool {
+func visibleSouth(grid [][]int, r, c int) (int, bool) {
+  var dist int
 	for row := r + 1; row < len(grid); row++ {
+    dist++
 		if grid[r][c] <= grid[row][c] {
-			return false
+			return dist, false
 		}
 	}
-	return true
+	return dist, true
 }
