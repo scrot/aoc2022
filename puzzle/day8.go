@@ -2,10 +2,7 @@ package puzzle
 
 import (
 	"bufio"
-	"io"
 	"log"
-	"strconv"
-	"strings"
 )
 
 type Day8 struct {
@@ -13,29 +10,28 @@ type Day8 struct {
 }
 
 func (d Day8) Solve() {
-  s := bufio.NewScanner(d.Dataset)
+	s := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 
-  var buf []string
-  for s.Scan() {
-    buf = append(buf, s.Text())
-  }
+	var buf []string
+	for s.Scan() {
+		buf = append(buf, s.Text())
+	}
 
 	grid := newGrid(buf)
 
-	total, score := iterateInnerTrees(grid)
-	total += len(grid)*2 + len(grid[0])*2 - 4
+	total, score := treeWalker(grid)
 
 	log.Printf("Answer part I: %d", total)
 	log.Printf("Answer part II: %d", score)
 }
 
 func newGrid(buf []string) [][]int {
-	grid := make([][]int, len(buf)-1)
+	grid := make([][]int, len(buf))
 
 	for r := 0; r < len(buf); r++ {
 		for c := 0; c < len(buf[r]); c++ {
-			f, _ := strconv.Atoi(string(buf[r][c]))
+			f := int(buf[r][c])
 			grid[r] = append(grid[r], f)
 		}
 	}
@@ -43,23 +39,23 @@ func newGrid(buf []string) [][]int {
 	return grid
 }
 
-func iterateInnerTrees(grid [][]int) (int, int) {
+func treeWalker(grid [][]int) (int, int) {
 	var count int
-  var highScore int
+	var highScore int
 
-	for row := 1; row < len(grid)-1; row++ {
-		for col := 1; col < len(grid[row])-1; col++ {
-      nd, n := visibleNorth(grid, row, col)
-			sd, s := visibleSouth(grid, row, col)
-			wd, w := visibleWest(grid, row, col)
-			ed, e :=visibleEast(grid, row, col)
+	for row := 0; row < len(grid); row++ {
+		for col := 0; col < len(grid[row]); col++ {
+			nd, n := checkDirection(grid, row, col, 0, -1)
+			sd, s := checkDirection(grid, row, col, 0, 1)
+			wd, w := checkDirection(grid, row, col, -1, 0)
+			ed, e := checkDirection(grid, row, col, 1, 0)
 
-      score := nd * sd * wd * ed
-      if score > highScore {
-        highScore = score
-      }
+			score := nd * sd * wd * ed
+			if score > highScore {
+				highScore = score
+			}
 
-      if n || s || w || e {
+			if n || s || w || e {
 				count++
 			}
 		}
@@ -68,44 +64,11 @@ func iterateInnerTrees(grid [][]int) (int, int) {
 	return count, highScore
 }
 
-func visibleEast(grid [][]int, r, c int) (int, bool) {
-  var dist int
-	for col := c - 1; col >= 0; col-- {
-    dist++
-		if grid[r][c] <= grid[r][col] {
-			return dist, false
-		}
-	}
-	return dist, true
-}
-
-func visibleWest(grid [][]int, r, c int) (int, bool) {
-  var dist int
-	for col := c + 1; col < len(grid[c]); col++ {
-    dist++
-		if grid[r][c] <= grid[r][col] {
-			return dist, false
-		}
-	}
-	return dist,true
-}
-
-func visibleNorth(grid [][]int, r, c int) (int, bool) {
-  var dist int
-	for row := r - 1; row >= 0; row-- {
-    dist++
-		if grid[r][c] <= grid[row][c] {
-			return dist, false
-		}
-	}
-	return dist, true
-}
-
-func visibleSouth(grid [][]int, r, c int) (int, bool) {
-  var dist int
-	for row := r + 1; row < len(grid); row++ {
-    dist++
-		if grid[r][c] <= grid[row][c] {
+func checkDirection(grid [][]int, r, c, h, v int) (int, bool) {
+	var dist int
+	for col, row := c+h, r+v; col >= 0 && col < len(grid[c]) && row >= 0 && row < len(grid); col, row = col+h, row+v {
+		dist++
+		if grid[r][c] <= grid[row][col] {
 			return dist, false
 		}
 	}
