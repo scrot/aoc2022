@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"math"
 )
 
 type Day9 struct {
@@ -16,64 +15,71 @@ type loc struct {
 }
 
 func (h loc) diff(t loc) loc {
-	hx, hy := float64(h.x), float64(h.y)
-	tx, ty := float64(t.x), float64(t.y)
-	return loc{int(math.Abs(hx - tx)), int(math.Abs(hy - ty))}
+	return loc{h.x - t.x, h.y - t.y}
 }
 
 func (l loc) String() string {
 	return fmt.Sprintf("(x:%d, y:%d)", l.x, l.y)
 }
 
-type vmap map[loc]bool
-
 func (d Day9) Solve() {
 	buf := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 
-	var h, t loc
-	v := vmap{loc{0, 0}: true}
+	v := map[loc]bool{{}: true}
+	v2 := map[loc]bool{{}: true}
+
+	var rope []loc
+	for i := 0; i < 10; i++ {
+		rope = append(rope, loc{})
+	}
 
 	for buf.Scan() {
-		move := buf.Text()
+		l := buf.Text()
+		steps, direction := parse(l)
 
-		h, t, v = step(h, t, v, move)
+		for s := 0; s < steps; s++ {
+			rope[0] = update(rope[0], direction)
+			for k := 1; k < len(rope); k++ {
+				rope[k] = follow(rope[k-1], rope[k])
+			}
+			v[rope[1]] = true
+			v2[rope[9]] = true
+		}
 
-		// log.Printf(move)
-		// log.Printf("tail %s", t)
-		// log.Printf("head %s", h)
 	}
 
 	log.Printf("Answer part I: %d", len(v))
-	log.Printf("Answer part II: %d", 0)
+	log.Printf("Answer part II: %d", len(v2))
 }
 
-func step(head, tail loc, visited vmap, move string) (loc, loc, vmap) {
-	var direction rune
-	var steps int
-	fmt.Sscanf(move, "%c %d", &direction, &steps)
+func parse(move string) (int, rune) {
+	var d rune
+	var s int
+	fmt.Sscanf(move, "%c %d", &d, &s)
+	return s, d
+}
 
-	for step := 0; step < steps; step++ {
-		head = update(head, direction)
+func follow(head, tail loc) loc {
+	d := head.diff(tail)
 
-		diff := head.diff(tail)
-		switch {
-		case diff.x <= 1 && diff.y <= 1:
-			// Do nothing
-		case diff.x == 1 && diff.y == 2:
-			tail.x = head.x
-			tail = update(tail, direction)
-			visited[tail] = true
-		case diff.x == 2 && diff.y == 1:
-			tail.y = head.y
-			tail = update(tail, direction)
-			visited[tail] = true
-		default:
-			tail = update(tail, direction)
-			visited[tail] = true
-		}
+	if d.x >= -1 && d.x <= 1 && d.y >= -1 && d.y <= 1 {
+		return tail
 	}
-	return head, tail, visited
+
+	if d.x > 0 {
+		tail = update(tail, 'R')
+	} else if d.x < 0 {
+		tail = update(tail, 'L')
+	}
+
+	if d.y > 0 {
+		tail = update(tail, 'U')
+	} else if d.y < 0 {
+		tail = update(tail, 'D')
+	}
+
+	return tail
 }
 
 func update(l loc, d rune) loc {

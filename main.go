@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 
 	"github.com/scrot/aoc2022/puzzle"
 )
@@ -35,6 +36,10 @@ func main() {
 		return
 	}
 
-	d.FetchDataSetByToken(*token)
+	if *token != "" {
+		d.FetchDataSetByToken(*token)
+	} else {
+		d.FetchDataByReader(os.Stdin)
+	}
 	d.Solve()
 }

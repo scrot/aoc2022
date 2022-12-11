@@ -14,7 +14,8 @@ const (
 
 type Solver interface {
 	Solve()
-  FetchDataSetByToken(string)
+	FetchDataSetByToken(string)
+	FetchDataByReader(io.ReadCloser)
 }
 
 type Day struct {
@@ -30,10 +31,14 @@ func NewDay(url string) *Day {
 	}
 }
 
+func (d *Day) FetchDataByReader(input io.ReadCloser) {
+	d.Dataset = input
+}
+
 func (d *Day) FetchDataSetByToken(sessionToken string) {
-  if sessionToken == "" {
-    panic(fmt.Errorf("Empty session token"))
-  }
+	if sessionToken == "" {
+		panic(fmt.Errorf("Empty session token"))
+	}
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		panic(err)
@@ -48,16 +53,15 @@ func (d *Day) FetchDataSetByToken(sessionToken string) {
 		panic(err)
 	}
 
-  req.AddCookie(&http.Cookie{
-    Name: "session",
-    Value: sessionToken,
-  })
+	req.AddCookie(&http.Cookie{
+		Name:  "session",
+		Value: sessionToken,
+	})
 
 	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)
 	}
 
-  d.Dataset = resp.Body
+	d.Dataset = resp.Body
 }
-
