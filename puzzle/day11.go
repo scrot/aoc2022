@@ -20,6 +20,7 @@ type monkey struct {
 	test      func(int) int
 
 	inspected int
+	divider   int
 }
 
 func (d Day11) Solve() {
@@ -27,23 +28,38 @@ func (d Day11) Solve() {
 	defer d.Dataset.Close()
 
 	monkeys := parseMonkeys(string(buf))
+	monkeys2 := parseMonkeys(string(buf))
+
+	log.Printf("Answer part I: %v", goBananas(monkeys, 20, false))
+	log.Printf("Answer part II: %d", goBananas(monkeys2, 10000, true))
+}
+
+func goBananas(monkeys []*monkey, rounds int, worried bool) int {
+	commonDenominator := 1
 	for _, m := range monkeys {
-		log.Println(m.items)
+		commonDenominator *= m.divider
 	}
 
-	for r := 0; r < 20; r++ {
+	for r := 0; r < rounds; r++ {
 		for _, m := range monkeys {
 			for _, item := range m.items {
 				//monkey inspects
 				inspected := item
 				inspected = m.operation(inspected)
+
+				if !worried {
+					inspected = int(float64(inspected) / 3.0)
+				} else {
+					// use common denominator to prevent overflow
+					inspected %= commonDenominator
+				}
+
 				m.inspected++
 				m.items = m.items[1:]
 
 				//monkey tests & throws
 				newOwner := m.test(inspected)
 				monkeys[newOwner].items = append(monkeys[newOwner].items, inspected)
-				log.Printf("Monkey %d items: %v", newOwner, monkeys[newOwner].items)
 			}
 		}
 	}
@@ -53,9 +69,7 @@ func (d Day11) Solve() {
 		activity = append(activity, m.inspected)
 	}
 	sort.Ints(activity)
-
-	log.Printf("Answer part I: %v", activity[len(activity)-1]*activity[len(activity)-2])
-	log.Printf("Answer part II: %d", 0)
+	return activity[len(activity)-1] * activity[len(activity)-2]
 }
 
 func parseMonkeys(input string) []*monkey {
@@ -65,10 +79,12 @@ func parseMonkeys(input string) []*monkey {
 	for _, ms := range mss {
 		m := strings.Split(ms, "\n")
 
+		test, div := parseTest(m[3:])
 		monkeys = append(monkeys, &monkey{
 			items:     parseItems(m[1]),
 			operation: parseOperation(m[2]),
-			test:      parseTest(m[3:]),
+			test:      test,
+			divider:   div,
 		})
 
 	}
@@ -82,7 +98,7 @@ func parseItems(l string) []int {
 	var items []int
 	for _, match := range matches {
 		item, _ := strconv.Atoi(match)
-		items = append(items, item)
+		items = append(items, int(item))
 	}
 	return items
 }
@@ -96,8 +112,10 @@ func parseOperation(l string) func(int) int {
 		if factor == "old" {
 			f = worry
 		} else {
-			f, _ = strconv.Atoi(factor)
+			v, _ := strconv.Atoi(factor)
+			f = int(v)
 		}
+
 		switch operator {
 		case '+':
 			worry += f
@@ -106,21 +124,20 @@ func parseOperation(l string) func(int) int {
 		default:
 			log.Fatal("invalid operator")
 		}
-		return int(float64(worry) / 3.0)
+		return worry
 
 	}
 }
 
-func parseTest(ls []string) func(int) int {
+func parseTest(ls []string) (func(int) int, int) {
 	var div, t, f int
 	fmt.Sscanf(strings.TrimSpace(ls[0]), "Test: divisible by %d", &div)
 	fmt.Sscanf(strings.TrimSpace(ls[1]), "If true: throw to monkey %d", &t)
 	fmt.Sscanf(strings.TrimSpace(ls[2]), "If false: throw to monkey %d", &f)
 	return func(worry int) int {
-
 		if worry%div == 0 {
 			return t
 		}
 		return f
-	}
+	}, div
 }
