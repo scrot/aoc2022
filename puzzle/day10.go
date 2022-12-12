@@ -15,18 +15,11 @@ func (d Day10) Solve() {
 	buf := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 
+	signals := newSignals()
+	image := newImage()
+
 	x := 1
 	var cycle int
-
-	signals := make(map[int]int)
-	for i := 20; i <= 220; i += 40 {
-		signals[i] = 0
-	}
-
-	var image [][]rune
-	for i := 0; i < 6; i++ {
-		image = append(image, []rune(strings.Repeat(".", 40)))
-	}
 
 	for buf.Scan() {
 		l := buf.Text()
@@ -35,35 +28,64 @@ func (d Day10) Solve() {
 		case "noop":
 			image = drawPixel(image, cycle, x)
 			cycle++
-			updateSignals(&signals, cycle, x)
+			signals = updateSignals(signals, cycle, x)
 		default:
 			for i := 0; i < 2; i++ {
 				image = drawPixel(image, cycle, x)
 				cycle++
-				updateSignals(&signals, cycle, x)
+				signals = updateSignals(signals, cycle, x)
 			}
-			var v int
-			fmt.Sscanf(l, "addx %d", &v)
-			x += v
+			x += parseAddr(l)
 		}
 	}
 
+	log.Printf("Answer part I: %d", sumSignals(signals))
+	log.Printf("Answer part II:\n%s", printImage(image))
+}
+
+func newImage() [][]rune {
+	var image [][]rune
+	for i := 0; i < 6; i++ {
+		image = append(image, []rune(strings.Repeat(".", 40)))
+	}
+	return image
+}
+
+func printImage(image [][]rune) string {
+	b := strings.Builder{}
+	for _, row := range image {
+		b.WriteString(fmt.Sprintf("%c\n", row))
+	}
+	return b.String()
+}
+
+func newSignals() map[int]int {
+	signals := make(map[int]int)
+	for i := 20; i <= 220; i += 40 {
+		signals[i] = 0
+	}
+	return signals
+}
+
+func updateSignals(signals map[int]int, cycle, x int) map[int]int {
+	if _, ok := signals[cycle]; ok {
+		signals[cycle] = x
+	}
+	return signals
+}
+
+func sumSignals(signals map[int]int) int {
 	var sum int
 	for k, v := range signals {
 		sum += k * v
 	}
-
-	log.Printf("Answer part I: %d", sum)
-	log.Println("Answer part II:")
-	for _, row := range image {
-		log.Println(string(row))
-	}
+	return sum
 }
 
-func updateSignals(signals *map[int]int, cycle, x int) {
-	if _, ok := (*signals)[cycle]; ok {
-		(*signals)[cycle] = x
-	}
+func parseAddr(l string) int {
+	var v int
+	fmt.Sscanf(l, "addx %d", &v)
+	return v
 }
 
 func drawPixel(image [][]rune, cycle, x int) [][]rune {
@@ -72,11 +94,4 @@ func drawPixel(image [][]rune, cycle, x int) [][]rune {
 		image[row][column] = '#'
 	}
 	return image
-}
-
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	}
-	return x
 }
