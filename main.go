@@ -25,6 +25,7 @@ var (
 		8:  puzzle.Day8{Day: puzzle.NewDay("https://adventofcode.com/2022/day/8/input")},
 		9:  puzzle.Day9{Day: puzzle.NewDay("https://adventofcode.com/2022/day/9/input")},
 		10: puzzle.Day10{Day: puzzle.NewDay("https://adventofcode.com/2022/day/10/input")},
+		11: puzzle.Day11{Day: puzzle.NewDay("https://adventofcode.com/2022/day/11/input")},
 	}
 )
 
