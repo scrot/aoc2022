@@ -20,6 +20,11 @@ func (p place) String() string {
 	return fmt.Sprintf("%d", p.index)
 }
 
+type path struct {
+	start, end place
+	route      []place
+}
+
 func (d Day12) Solve() {
 	buf := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
@@ -42,14 +47,18 @@ func (d Day12) Solve() {
 
 	var p1 int
 	var ps []int
-	for _, p := range lowestPlaces {
-		if p == start {
-			p1, _ = bfs(p, end, adjacencyList)
-		}
 
-		path, _ := bfs(p, end, adjacencyList)
-		if path != -1 {
-			ps = append(ps, path)
+	// concurrent bfs for all shortest paths from 'a'
+	ch := make(chan path, len(lowestPlaces))
+	for _, p := range lowestPlaces {
+		go bfs(p, end, adjacencyList, ch)
+		path := <-ch
+		l := len(path.route)
+		if l > 0 {
+			if path.start == start {
+				p1 = l
+			}
+			ps = append(ps, l)
 		}
 	}
 
@@ -127,7 +136,7 @@ func adjacencyList(grid [][]place) map[int][]place {
 	return adjacencyList
 }
 
-func bfs(start, end place, adjacencyList map[int][]place) (int, []place) {
+func bfs(start, end place, adjacencyList map[int][]place, ch chan<- path) {
 	var queue []place
 	queue = append(queue, start)
 
@@ -148,7 +157,7 @@ func bfs(start, end place, adjacencyList map[int][]place) (int, []place) {
 				current = previous[current.index]
 				// fmt.Println(shortest)
 			}
-			return len(shortest), shortest
+			ch <- path{start: start, end: end, route: shortest}
 		}
 
 		// enqueue neighbors of current node
@@ -162,7 +171,7 @@ func bfs(start, end place, adjacencyList map[int][]place) (int, []place) {
 
 	}
 	// fmt.Println("Empty queue, end not found")
-	return -1, nil
+	ch <- path{}
 }
 
 func charToHeight(char rune) int {
