@@ -49,10 +49,16 @@ func (d Day12) Solve() {
 	var ps []int
 
 	// concurrent bfs for all shortest paths from 'a'
-	ch := make(chan path, len(lowestPlaces))
-	for _, p := range lowestPlaces {
-		go bfs(p, end, adjacencyList, ch)
-		path := <-ch
+	ch := make(chan path)
+
+	go func() {
+		for _, p := range lowestPlaces {
+			ch <- bfs(p, end, adjacencyList)
+		}
+		close(ch)
+	}()
+
+	for path := range ch {
 		l := len(path.route)
 		if l > 0 {
 			if path.start == start {
@@ -136,7 +142,7 @@ func adjacencyList(grid [][]place) map[int][]place {
 	return adjacencyList
 }
 
-func bfs(start, end place, adjacencyList map[int][]place, ch chan<- path) {
+func bfs(start, end place, adjacencyList map[int][]place) path {
 	var queue []place
 	queue = append(queue, start)
 
@@ -157,7 +163,7 @@ func bfs(start, end place, adjacencyList map[int][]place, ch chan<- path) {
 				current = previous[current.index]
 				// fmt.Println(shortest)
 			}
-			ch <- path{start: start, end: end, route: shortest}
+			return path{start: start, end: end, route: shortest}
 		}
 
 		// enqueue neighbors of current node
@@ -168,10 +174,9 @@ func bfs(start, end place, adjacencyList map[int][]place, ch chan<- path) {
 				visited[neighbor.index] = true
 			}
 		}
-
 	}
 	// fmt.Println("Empty queue, end not found")
-	ch <- path{}
+	return path{}
 }
 
 func charToHeight(char rune) int {
