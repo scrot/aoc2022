@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"sort"
 )
 
 type Day12 struct {
@@ -11,10 +12,8 @@ type Day12 struct {
 }
 
 type place struct {
-	index      int
-	height     int
-	x, y       int
-	start, end bool
+	index  int
+	height int
 }
 
 func (p place) String() string {
@@ -31,18 +30,33 @@ func (d Day12) Solve() {
 	// indices > adjacency list
 	adjacencyList := adjacencyList(grid)
 
-	// bfs shortest path
-	previous := bfs(start, end, adjacencyList)
-	current := end
-	var shortest []place
-	for !current.start {
-		shortest = append(shortest, current)
-		current = previous[current.index]
+	// all squares with height 'a'
+	var lowestPlaces []place
+	for _, row := range grid {
+		for _, field := range row {
+			if field.height == 0 {
+				lowestPlaces = append(lowestPlaces, field)
+			}
+		}
 	}
 
-	// fmt.Println(shortest)
+	var p1 int
+	var ps []int
+	for _, p := range lowestPlaces {
+		if p == start {
+			p1, _ = bfs(p, end, adjacencyList)
+		}
 
-	log.Printf("Answer part I: %d", len(shortest))
+		path, _ := bfs(p, end, adjacencyList)
+		if path != -1 {
+			ps = append(ps, path)
+		}
+	}
+
+	sort.Ints(ps)
+
+	log.Printf("Answer part I: %d", p1)
+	log.Printf("Answer part II: %d", ps[0])
 
 }
 
@@ -56,21 +70,17 @@ func parseInput(input *bufio.Scanner) (place, place, [][]place) {
 		line := input.Text()
 
 		grid = append(grid, make([]place, 0, len(line)))
-		for i, char := range line {
+		for _, char := range line {
 			p := place{
 				index:  index,
 				height: charToHeight(char),
-				x:      i,
-				y:      row,
 			}
 
 			if char == 'S' {
-				p.start = true
 				start = p
 			}
 
 			if char == 'E' {
-				p.end = true
 				end = p
 			}
 
@@ -117,7 +127,7 @@ func adjacencyList(grid [][]place) map[int][]place {
 	return adjacencyList
 }
 
-func bfs(start, end place, adjacencyList map[int][]place) map[int]place {
+func bfs(start, end place, adjacencyList map[int][]place) (int, []place) {
 	var queue []place
 	queue = append(queue, start)
 
@@ -130,10 +140,18 @@ func bfs(start, end place, adjacencyList map[int][]place) map[int]place {
 		current := queue[0]
 		queue = queue[1:]
 
-		if current.end {
-			return previous
+		//find shortest path if goal reached
+		if current == end {
+			var shortest []place
+			for current != start {
+				shortest = append(shortest, current)
+				current = previous[current.index]
+				// fmt.Println(shortest)
+			}
+			return len(shortest), shortest
 		}
 
+		// enqueue neighbors of current node
 		for _, neighbor := range adjacencyList[current.index] {
 			if !visited[neighbor.index] {
 				previous[neighbor.index] = current
@@ -142,10 +160,9 @@ func bfs(start, end place, adjacencyList map[int][]place) map[int]place {
 			}
 		}
 
-		// log.Println(queue)
 	}
-	fmt.Println("Empty queue, end not found")
-	return previous
+	// fmt.Println("Empty queue, end not found")
+	return -1, nil
 }
 
 func charToHeight(char rune) int {
