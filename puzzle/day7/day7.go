@@ -1,4 +1,4 @@
-package puzzle
+package day7
 
 import (
 	"bufio"
@@ -6,10 +6,12 @@ import (
 	"log"
 	"math"
 	"regexp"
+
+	"github.com/scrot/aoc2022/puzzle"
 )
 
-type Day7 struct {
-	*Day
+type Day struct {
+	*puzzle.Day
 }
 
 type Node struct {
@@ -23,7 +25,7 @@ func (n Node) String() string {
 	return n.Name
 }
 
-func (d Day7) Solve() {
+func (d Day) Solve() {
 	buf := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 
@@ -68,7 +70,7 @@ func (d Day7) Solve() {
 		}
 	})
 
-  del := math.MaxInt
+	del := math.MaxInt
 	walkTree(tree, &del, func(n *Node, i *int) {
 		spaceReq := 30000000 - (70000000 - tree.Size)
 		if n.Dir && n.Size >= spaceReq && n.Size < del {
@@ -77,7 +79,7 @@ func (d Day7) Solve() {
 	})
 
 	// spaceReq := 30000000 - (70000000 - tree.Size)
-  // log.Printf("Used space %d, free-up %d\n", tree.Size, spaceReq)
+	// log.Printf("Used space %d, free-up %d\n", tree.Size, spaceReq)
 
 	log.Printf("Answer part I: %d\n", sum)
 	log.Printf("Answer part II: %d\n", del)

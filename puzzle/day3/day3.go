@@ -1,16 +1,18 @@
-package puzzle
+package day3
 
 import (
 	"bufio"
 	"log"
 	"strings"
+
+	"github.com/scrot/aoc2022/puzzle"
 )
 
-type Day3 struct {
-	*Day
+type Day struct {
+	*puzzle.Day
 }
 
-func (d Day3) Solve() {
+func (d Day) Solve() {
 	prios := generatePriorities()
 
 	buf := bufio.NewScanner(d.Dataset)
@@ -58,7 +60,7 @@ func findDuplicateItem(l string) rune {
 func findBadgeItem(group [3]string) rune {
 	bucket := make(map[rune]int)
 	for _, sack := range group {
-    added := make(map[rune]bool)
+		added := make(map[rune]bool)
 		for _, c := range sack {
 			if !added[c] {
 				bucket[c]++
@@ -71,7 +73,7 @@ func findBadgeItem(group [3]string) rune {
 	for key, value := range bucket {
 		if value == 3 {
 			match = key
-      break
+			break
 		}
 	}
 	// log.Printf("%c appears in %v (%d)\n", match, group, len(group))

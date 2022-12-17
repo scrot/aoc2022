@@ -1,16 +1,18 @@
-package puzzle
+package day6
 
 import (
 	"io"
 	"log"
 	"math/bits"
+
+	"github.com/scrot/aoc2022/puzzle"
 )
 
-type Day6 struct {
-	*Day
+type Day struct {
+	*puzzle.Day
 }
 
-func (d Day6) Solve() {
+func (d Day) Solve() {
 	buf, _ := io.ReadAll(d.Dataset)
 	defer d.Dataset.Close()
 

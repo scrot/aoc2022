@@ -1,13 +1,15 @@
-package puzzle
+package day9
 
 import (
 	"bufio"
 	"fmt"
 	"log"
+
+	"github.com/scrot/aoc2022/puzzle"
 )
 
-type Day9 struct {
-	*Day
+type Day struct {
+	*puzzle.Day
 }
 
 type loc struct {
@@ -22,7 +24,7 @@ func (l loc) String() string {
 	return fmt.Sprintf("(x:%d, y:%d)", l.x, l.y)
 }
 
-func (d Day9) Solve() {
+func (d Day) Solve() {
 	buf := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 

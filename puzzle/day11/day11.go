@@ -1,4 +1,4 @@
-package puzzle
+package day11
 
 import (
 	"fmt"
@@ -8,10 +8,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/scrot/aoc2022/puzzle"
 )
 
-type Day11 struct {
-	*Day
+type Day struct {
+	*puzzle.Day
 }
 
 type monkey struct {
@@ -23,7 +25,7 @@ type monkey struct {
 	divider   int
 }
 
-func (d Day11) Solve() {
+func (d Day) Solve() {
 	buf, _ := io.ReadAll(d.Dataset)
 	defer d.Dataset.Close()
 

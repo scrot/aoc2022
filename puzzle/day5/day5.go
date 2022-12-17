@@ -1,18 +1,20 @@
-package puzzle
+package day5
 
 import (
 	"bufio"
 	"fmt"
 	"log"
+
+	"github.com/scrot/aoc2022/puzzle"
 )
 
-type Day5 struct {
-	*Day
+type Day struct {
+	*puzzle.Day
 }
 
 type stacks [9][]rune
 
-func (d Day5) Solve() {
+func (d Day) Solve() {
 	buf := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 

@@ -1,15 +1,17 @@
-package puzzle
+package day8
 
 import (
 	"bufio"
 	"log"
+
+	"github.com/scrot/aoc2022/puzzle"
 )
 
-type Day8 struct {
-	*Day
+type Day struct {
+	*puzzle.Day
 }
 
-func (d Day8) Solve() {
+func (d Day) Solve() {
 	s := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 

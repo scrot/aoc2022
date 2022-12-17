@@ -1,19 +1,21 @@
-package puzzle
+package day1
 
 import (
 	"bufio"
 	"log"
 	"sort"
 	"strconv"
+
+	"github.com/scrot/aoc2022/puzzle"
 )
 
-type Day1 struct {
-  *Day
+type Day struct {
+	*puzzle.Day
 }
 
-func (d Day1) Solve() {
+func (d Day) Solve() {
 	buf := bufio.NewScanner(d.Dataset)
-  defer d.Dataset.Close()
+	defer d.Dataset.Close()
 
 	var curCal int
 	var topCals []int

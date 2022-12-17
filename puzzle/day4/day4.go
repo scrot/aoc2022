@@ -1,17 +1,19 @@
-package puzzle
+package day4
 
 import (
 	"bufio"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/scrot/aoc2022/puzzle"
 )
 
-type Day4 struct {
-	*Day
+type Day struct {
+	*puzzle.Day
 }
 
-func (d Day4) Solve() {
+func (d Day) Solve() {
 	buf := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 
@@ -34,9 +36,9 @@ func (d Day4) Solve() {
 			contains++
 		}
 
-    if sectionOverlaps(s1s, s1e, s2s, s2e) {
-      overlaps++
-    }
+		if sectionOverlaps(s1s, s1e, s2s, s2e) {
+			overlaps++
+		}
 	}
 
 	log.Printf("Answer Part I: %d", contains)

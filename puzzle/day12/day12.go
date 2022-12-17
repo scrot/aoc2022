@@ -1,14 +1,16 @@
-package puzzle
+package day12
 
 import (
 	"bufio"
 	"fmt"
 	"log"
 	"sort"
+
+	"github.com/scrot/aoc2022/puzzle"
 )
 
-type Day12 struct {
-	*Day
+type Day struct {
+	*puzzle.Day
 }
 
 type place struct {
@@ -25,7 +27,7 @@ type path struct {
 	route      []place
 }
 
-func (d Day12) Solve() {
+func (d Day) Solve() {
 	buf := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 
