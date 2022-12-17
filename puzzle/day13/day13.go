@@ -2,7 +2,6 @@ package day13
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -20,35 +19,30 @@ func (d Day) Solve() {
 
 	input := parseInput(buf)
 
-	var index int
-	var correct int
-
+	var index, correct int
 	for i := 0; i < len(input)-1; i += 2 {
 		index++
-		elemsA := NewList(input[i])
-		elemsB := NewList(input[i+1])
-		eq := elemsA.CompareTo(elemsB)
-		if eq <= 0 {
+		elemsA := [][]byte{input[i]}
+		elemsB := [][]byte{input[i+1]}
+		if compare(elemsA, elemsB) <= 0 {
 			correct += index
 		}
-		fmt.Printf("%s vs %s (compare %d)\n", elemsA, elemsB, eq)
 	}
 
-	dpkg := []string{"[[2]]", "[[6]]"}
-	input = append(input, dpkg...)
+	input = append(input, []byte("[[2]]"), []byte("[[6]]"))
 
 	sort.Slice(input, func(i, j int) bool {
-		il := NewList(input[i])
-		jl := NewList(input[j])
-		return il.LessThan(jl)
+		il := [][]byte{input[i]}
+		jl := [][]byte{input[j]}
+		return compare(il, jl) <= 0
 	})
 
 	var dp1, dp2 int
 	for i, line := range input {
-		if line == dpkg[0] {
+		if string(line) == "[[2]]" {
 			dp1 = i + 1
 		}
-		if line == dpkg[1] {
+		if string(line) == "[[6]]" {
 			dp2 = i + 1
 		}
 	}
@@ -57,131 +51,84 @@ func (d Day) Solve() {
 	log.Printf("Answer part II: %d", dp1*dp2)
 }
 
-func parseInput(input *bufio.Scanner) []string {
-	var ls []string
+func parseInput(input *bufio.Scanner) [][]byte {
+	var ls [][]byte
 	for input.Scan() {
 		l := input.Text()
 		if l == "" {
 			continue
 		}
-		ls = append(ls, l)
+		ls = append(ls, []byte(l))
 	}
 	return ls
 }
 
-func splitList(l []byte) list {
-	// fmt.Printf("Split list: %s\n", l)
-	var elems list
+func splitList(l []byte) [][]byte {
+	var elems [][]byte
 
 	var depth int
-	var digit []byte
-	var ls []byte
+	var digit, ls []byte
 
 	for i := 1; i < len(l)-1; i++ {
 
-		// fmt.Printf("digit: %c, ls: %s\n", digit, string(ls))
-		switch l[i] {
-		case '[':
+		if l[i] == '[' {
 			depth++
+		}
+
+		if depth > 0 {
 			ls = append(ls, l[i])
-		case ']':
+		}
+
+		if l[i] == ']' {
 			depth--
-			ls = append(ls, l[i])
+
 			if depth == 0 {
 				elems = append(elems, ls)
 				ls = []byte{}
 			}
-		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			if depth == 0 {
-				digit = append(digit, l[i])
-				if l[i+1] < '0' || l[i+1] > '9' {
-					elems = append(elems, digit)
-					digit = []byte{}
-				}
-			} else {
-				ls = append(ls, l[i])
+		}
+
+		if l[i] >= '0' && l[i] <= '9' && depth == 0 {
+			digit = append(digit, l[i])
+			if l[i+1] < '0' || l[i+1] > '9' {
+				elems = append(elems, digit)
+				digit = []byte{}
 			}
-		case ',':
-			if depth > 0 {
-				ls = append(ls, l[i])
-			}
-		default:
-			fmt.Println("Not all chars parsed")
 		}
 	}
 
-	// fmt.Printf("Result list: %s\n", elems)
 	return elems
 }
 
-type list [][]byte
-
-func NewList(l string) list {
-	return list{[]byte(l)}
-}
-
-func (i list) LessThan(j list) bool {
-	return i.CompareTo(j) < 0
-}
-
-func (i list) EqualTo(j list) bool {
-	return i.CompareTo(j) == 0
-}
-
-func (i list) CompareTo(j list) int {
-	for index := 0; index < len(i); index++ {
-		// i is equal to j but longer
-		if index >= len(j) {
-			return 1
-		}
-
-		var res int
+func compare(i, j [][]byte) int {
+	for index := 0; index < len(i) && index < len(j); index++ {
 		di, erri := strconv.Atoi(string(i[index]))
 		dj, errj := strconv.Atoi(string(j[index]))
 
-		// fmt.Printf("Comparing %s and %s\n", i[index], j[index])
-
+		var res int
+		var li, lj [][]byte
 		switch {
-		case erri == nil && errj != nil: //dj is list
-			li := list{i[index]}
-			lj := splitList(j[index])
-			res = li.CompareTo(lj)
-		case erri != nil && errj == nil: //di is list
-			li := splitList(i[index])
-			lj := list{j[index]}
-			res = li.CompareTo(lj)
-		case erri != nil && errj != nil: //both are lists
-			li := splitList(i[index])
-			lj := splitList(j[index])
-			res = li.CompareTo(lj)
-		default: //both are numbers
-			res = cmp(di, dj)
+		case erri == nil && errj != nil:
+			li = [][]byte{i[index]}
+			lj = splitList(j[index])
+			res = compare(li, lj)
+		case erri != nil && errj == nil:
+			li = splitList(i[index])
+			lj = [][]byte{j[index]}
+			res = compare(li, lj)
+		case erri != nil && errj != nil:
+			li = splitList(i[index])
+			lj = splitList(j[index])
+			res = compare(li, lj)
+		default:
+			res = di - dj
 		}
 
-		// if elems not equal return
-		if res == 0 {
-			continue
-		} else {
+		if res != 0 {
 			return res
 		}
 	}
 
-	// i is equal to j
-	if len(i) == len(j) {
-		return 0
-	}
+	return len(i) - len(j)
 
-	// i is equal but shorter than j
-	return -1
-}
-
-func cmp(x, y int) int {
-	switch {
-	case x-y < 0:
-		return -1
-	case x-y > 0:
-		return 1
-	default:
-		return 0
-	}
 }
