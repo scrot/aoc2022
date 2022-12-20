@@ -30,7 +30,7 @@ func (d Day) Solve() {
 	//Draw cave
 	sandsrc := loc{500, 0}
 	formations := parseInput(buf)
-	dim, grid := buildGrid(formations, sandsrc)
+	dim, grid := buildGrid(formations, sandsrc, 1)
 
 	//Drop sand
 	var grains int
@@ -44,8 +44,29 @@ func (d Day) Solve() {
 		fmt.Printf("%c\n", row)
 	}
 
+	// Draw cave with floor
+	width := (dim[3] - dim[2])
+	floor := []loc{{dim[0] - width, dim[3] + 2}, {dim[1] + width, dim[3] + 2}}
+	formations = append(formations, floor)
+	dim2, grid2 := buildGrid(formations, sandsrc, 0)
+
+	for _, row := range grid2 {
+		fmt.Printf("%c\n", row)
+	}
+
+	var grains2 int
+	var hitsrc bool
+	for !hitsrc {
+		grains2++
+		grid2, hitsrc = dropSand(sandsrc, dim2, grid2)
+	}
+
+	for _, row := range grid2 {
+		fmt.Printf("%c\n", row)
+	}
+
 	log.Printf("Answer part I: %d\n", grains-1)
-	log.Printf("Answer part II: %d\n", 0)
+	log.Printf("Answer part II: %d\n", grains2)
 }
 
 func parseInput(input *bufio.Scanner) [][]loc {
@@ -68,7 +89,7 @@ func parseInput(input *bufio.Scanner) [][]loc {
 	return formations
 }
 
-func buildGrid(formations [][]loc, ss loc) ([]int, [][]rune) {
+func buildGrid(formations [][]loc, ss loc, offset int) ([]int, [][]rune) {
 	// Find grid edges
 	minx, maxx := ss.x, ss.x
 	miny, maxy := ss.y, ss.y
@@ -93,8 +114,8 @@ func buildGrid(formations [][]loc, ss loc) ([]int, [][]rune) {
 	}
 
 	// add l/r margin for easy checking
-	minx--
-	maxx++
+	minx -= offset
+	maxx += offset
 	dim := []int{minx, maxx, miny, maxy}
 
 	// Init an empty grid
@@ -131,13 +152,15 @@ func buildGrid(formations [][]loc, ss loc) ([]int, [][]rune) {
 }
 
 func dropSand(ss loc, dim []int, grid [][]rune) ([][]rune, bool) {
-	grain := loc{ss.x - dim[0], ss.y - dim[2]}
+	ss = loc{ss.x - dim[0], ss.y - dim[2]}
+	grain := ss
 
 	for {
 		down := grain.transform(loc{0, 1})
 		left := grain.transform(loc{-1, 1})
 		right := grain.transform(loc{1, 1})
 
+		//Grain falls in void
 		if down.y > dim[3] {
 			return grid, true
 		}
@@ -150,6 +173,10 @@ func dropSand(ss loc, dim []int, grid [][]rune) ([][]rune, bool) {
 		case grid[right.y][right.x] != '#' && grid[right.y][right.x] != 'o':
 			grain = right
 		default:
+			//Grain hits sand source
+			if grain == ss {
+				return grid, true
+			}
 			grid[grain.y][grain.x] = 'o'
 			return grid, false
 		}
