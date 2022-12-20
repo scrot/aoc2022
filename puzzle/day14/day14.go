@@ -23,21 +23,20 @@ func (l loc) transform(l2 loc) loc {
 }
 
 func (d Day) Solve() {
-	//Parse input
 	buf := bufio.NewScanner(d.Dataset)
 	defer d.Dataset.Close()
 
 	//Draw cave
 	sandsrc := loc{500, 0}
 	formations := parseInput(buf)
-	dim, grid := buildGrid(formations, sandsrc, 1)
+	min, max, grid := buildGrid(formations, sandsrc)
 
 	//Drop sand
 	var grains int
 	var void bool
 	for !void {
 		grains++
-		grid, void = dropSand(sandsrc, dim, grid)
+		grid, void = dropSand(sandsrc, min, max, grid)
 	}
 
 	for _, row := range grid {
@@ -45,23 +44,18 @@ func (d Day) Solve() {
 	}
 
 	// Draw cave with floor
-	width := (dim[3] - dim[2])
-	floor := []loc{{dim[0] - width, dim[3] + 2}, {dim[1] + width, dim[3] + 2}}
+	floor := []loc{{min.x - max.y, max.y + 2}, {max.x + max.y, max.y + 2}}
 	formations = append(formations, floor)
-	dim2, grid2 := buildGrid(formations, sandsrc, 0)
-
-	for _, row := range grid2 {
-		fmt.Printf("%c\n", row)
-	}
+	min, max, grid = buildGrid(formations, sandsrc)
 
 	var grains2 int
 	var hitsrc bool
 	for !hitsrc {
 		grains2++
-		grid2, hitsrc = dropSand(sandsrc, dim2, grid2)
+		grid, hitsrc = dropSand(sandsrc, min, max, grid)
 	}
 
-	for _, row := range grid2 {
+	for _, row := range grid {
 		fmt.Printf("%c\n", row)
 	}
 
@@ -84,45 +78,40 @@ func parseInput(input *bufio.Scanner) [][]loc {
 		formations = append(formations, points)
 	}
 
-	// formations = append(formations, []loc{{500, 0}})
-
 	return formations
 }
 
-func buildGrid(formations [][]loc, ss loc, offset int) ([]int, [][]rune) {
+func buildGrid(formations [][]loc, ss loc) (loc, loc, [][]rune) {
 	// Find grid edges
-	minx, maxx := ss.x, ss.x
-	miny, maxy := ss.y, ss.y
+	var (
+		min = loc{ss.x, ss.y}
+		max = loc{ss.x, ss.y}
+	)
 	for _, f := range formations {
 		for _, p := range f {
-			if p.x > maxx {
-				maxx = p.x
+			if p.x > max.x {
+				max.x = p.x
 			}
 
-			if p.x < minx {
-				minx = p.x
+			if p.x < min.x {
+				min.x = p.x
 			}
 
-			if p.y > maxy {
-				maxy = p.y
+			if p.y > max.y {
+				max.y = p.y
 			}
 
-			if p.y < miny {
-				miny = p.y
+			if p.y < min.y {
+				min.y = p.y
 			}
 		}
 	}
 
-	// add l/r margin for easy checking
-	minx -= offset
-	maxx += offset
-	dim := []int{minx, maxx, miny, maxy}
-
 	// Init an empty grid
 	var grid [][]rune
-	for i := 0; i <= maxy-miny; i++ {
+	for i := 0; i <= max.y-min.y; i++ {
 		var col []rune
-		for j := 0; j <= maxx-minx; j++ {
+		for j := 0; j <= max.x-min.x; j++ {
 			col = append(col, '.')
 		}
 		grid = append(grid, col)
@@ -136,23 +125,22 @@ func buildGrid(formations [][]loc, ss loc, offset int) ([]int, [][]rune) {
 			dy := p2.y - p1.y
 			for p1 != p2 {
 				// draw step
-				grid[p1.y-miny][p1.x-minx] = '#'
-				// update a
+				grid[p1.y-min.y][p1.x-min.x] = '#'
 				step := loc{step(dx), step(dy)}
 				p1 = p1.transform(step)
 			}
-			grid[p2.y-miny][p2.x-minx] = '#'
+			grid[p2.y-min.y][p2.x-min.x] = '#'
 		}
 	}
 
 	// Add sand source
-	grid[ss.y-miny][ss.x-minx] = '+'
+	grid[ss.y-min.y][ss.x-min.x] = '+'
 
-	return dim, grid
+	return min, max, grid
 }
 
-func dropSand(ss loc, dim []int, grid [][]rune) ([][]rune, bool) {
-	ss = loc{ss.x - dim[0], ss.y - dim[2]}
+func dropSand(ss, min, max loc, grid [][]rune) ([][]rune, bool) {
+	ss = loc{ss.x - min.x, ss.y - min.y}
 	grain := ss
 
 	for {
@@ -161,7 +149,7 @@ func dropSand(ss loc, dim []int, grid [][]rune) ([][]rune, bool) {
 		right := grain.transform(loc{1, 1})
 
 		//Grain falls in void
-		if down.y > dim[3] {
+		if left.x < 0 || right.x > max.x-min.x {
 			return grid, true
 		}
 
@@ -173,11 +161,12 @@ func dropSand(ss loc, dim []int, grid [][]rune) ([][]rune, bool) {
 		case grid[right.y][right.x] != '#' && grid[right.y][right.x] != 'o':
 			grain = right
 		default:
+			grid[grain.y][grain.x] = 'o'
+
 			//Grain hits sand source
 			if grain == ss {
 				return grid, true
 			}
-			grid[grain.y][grain.x] = 'o'
 			return grid, false
 		}
 	}
