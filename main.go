@@ -12,6 +12,7 @@ import (
 	"github.com/scrot/aoc2022/puzzle/day12"
 	"github.com/scrot/aoc2022/puzzle/day13"
 	"github.com/scrot/aoc2022/puzzle/day14"
+	"github.com/scrot/aoc2022/puzzle/day15"
 	"github.com/scrot/aoc2022/puzzle/day2"
 	"github.com/scrot/aoc2022/puzzle/day3"
 	"github.com/scrot/aoc2022/puzzle/day4"
@@ -43,6 +44,7 @@ var (
 		12: day12.Day{Day: puzzle.NewDay("https://adventofcode.com/2022/day/12/input")},
 		13: day13.Day{Day: puzzle.NewDay("https://adventofcode.com/2022/day/13/input")},
 		14: day14.Day{Day: puzzle.NewDay("https://adventofcode.com/2022/day/14/input")},
+		15: day15.Day{Day: puzzle.NewDay("https://adventofcode.com/2022/day/15/input")},
 	}
 )
 
