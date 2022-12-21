@@ -33,9 +33,27 @@ func (l loc) abs() loc {
 	return l
 }
 
+type area struct {
+	center                 loc
+	xmin, xmax, ymin, ymax loc
+}
+
 type sensor struct {
 	coord  loc
 	beacon loc
+}
+
+func (s sensor) contains(l loc) bool {
+	a := s.manhattan()
+	b := s.manhattan()
+	U := 2 * s.manhattan()
+	V := 2 * s.manhattan()
+	W := loc{l.x - s.coord.x, l.y - s.coord.y}
+	abs := loc{W.x * U, W.y * V}.abs()
+	if abs.x/a+abs.y/b <= 1 {
+		return true
+	}
+	return false
 }
 
 func (s sensor) manhattan() int {
@@ -45,39 +63,23 @@ func (s sensor) manhattan() int {
 
 func (d Day) Solve() {
 	// Parse input
-	index, min, max, sensors := parseInput(d.Dataset)
+	sensors := parseInput(d.Dataset)
 
 	// Sensor coverage
-	coverage := coverage(sensors)
+	// coverage := coverage(sensors)
 
-	// Draw coverage
-	grid := draw(min, max, coverage, sensors)
+	//
+	sensors[0].contains(loc{4, 20})
+	fmt.Println("Point 4,20 is contained by %v\n", sensors[0])
 
-	for _, row := range grid {
-		fmt.Printf("%c\n", row)
-	}
-
-	var p1 int
-	for _, f := range grid[index+10] {
-		if f == '#' {
-			p1++
-		}
-	}
-
-	log.Printf("Answer part I: %d", p1)
+	log.Printf("Answer part I: %d", 0)
 	log.Printf("Answer part II: %d", 0)
 }
 
-func parseInput(input io.ReadCloser) (int, loc, loc, []sensor) {
+func parseInput(input io.ReadCloser) []sensor {
 	buf := bufio.NewScanner(input)
 	defer input.Close()
 
-	var (
-		min = loc{math.MaxInt, math.MaxInt}
-		max = loc{math.MinInt, math.MinInt}
-	)
-
-	var index int
 	var sensors []sensor
 	for buf.Scan() {
 		l := buf.Text()
@@ -86,77 +88,27 @@ func parseInput(input io.ReadCloser) (int, loc, loc, []sensor) {
 		fmt.Sscanf(l, "Sensor at x=%d, y=%d: closest beacon is at x=%d, y=%d", &c.x, &c.y, &b.x, &b.y)
 		s := sensor{c, b}
 
-		if s.coord.x-s.manhattan() < min.x {
-			min.x = s.coord.x - s.manhattan()
-		}
-
-		if s.coord.x+s.manhattan() > max.x {
-			max.x = s.coord.x + s.manhattan()
-		}
-
-		if s.coord.y-s.manhattan() < min.y {
-			index = s.coord.y + s.manhattan()
-			min.y = s.coord.y - s.manhattan()
-		}
-
-		if s.coord.y+s.manhattan() > max.y {
-			max.y = s.coord.y + s.manhattan()
-		}
-
 		sensors = append(sensors, s)
 	}
 
-	return index, min, max, sensors
+	return sensors
 }
 
-func coverage(sensors []sensor) []loc {
-	var coverage []loc
+func coverage(sensors []sensor) []area {
+	var coverage []area
 
 	for _, sensor := range sensors {
-
 		dist := sensor.manhattan()
-
-		// Coverage top-half
-		width := 0
-		for i := dist; i >= 0; i-- {
-			for j := -width; j <= width; j++ {
-				signal := loc{sensor.coord.x + i, sensor.coord.y + j}
-				coverage = append(coverage, signal)
-			}
-			width++
+		a := area{
+			loc{sensor.coord.x, sensor.coord.y},
+			loc{sensor.coord.x - dist, sensor.coord.y},
+			loc{sensor.coord.x + dist, sensor.coord.y},
+			loc{sensor.coord.x, sensor.coord.y - dist},
+			loc{sensor.coord.x, sensor.coord.y + dist},
 		}
 
-		// Coverage bottom-half (excl. row 0)
-		width = 0
-		for i := -dist; i < 0; i++ {
-			for j := -width; j <= width; j++ {
-				signal := loc{sensor.coord.x + i, sensor.coord.y + j}
-				coverage = append(coverage, signal)
-			}
-			width++
-		}
+		coverage = append(coverage, a)
 	}
 
 	return coverage
-}
-
-func draw(min, max loc, coverage []loc, sensors []sensor) [][]rune {
-	var grid [][]rune
-	for i := min.y; i <= max.y; i++ {
-		var row []rune
-		for j := min.x; j <= max.x; j++ {
-			row = append(row, '.')
-		}
-		grid = append(grid, row)
-	}
-	for _, signal := range coverage {
-		grid[signal.y+min.abs().y][signal.x+min.abs().x] = '#'
-	}
-
-	for _, sensor := range sensors {
-		grid[sensor.beacon.y+min.abs().y][sensor.beacon.x+min.abs().x] = 'B'
-		grid[sensor.coord.y+min.abs().y][sensor.coord.x+min.abs().x] = 'S'
-	}
-
-	return grid
 }
