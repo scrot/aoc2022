@@ -33,24 +33,17 @@ func (l loc) abs() loc {
 	return l
 }
 
-type area struct {
-	center                 loc
-	xmin, xmax, ymin, ymax loc
-}
-
 type sensor struct {
 	coord  loc
 	beacon loc
 }
 
 func (s sensor) contains(l loc) bool {
-	a := s.manhattan()
-	b := s.manhattan()
-	U := 2 * s.manhattan()
-	V := 2 * s.manhattan()
-	W := loc{l.x - s.coord.x, l.y - s.coord.y}
-	abs := loc{W.x * U, W.y * V}.abs()
-	if abs.x/a+abs.y/b <= 1 {
+	// distance point from center
+	dist := loc{l.x - s.coord.x, l.y - s.coord.y}.abs()
+
+	// dist point smaller than edge distance then in diamond
+	if dist.x+dist.y < s.manhattan() {
 		return true
 	}
 	return false
@@ -63,22 +56,42 @@ func (s sensor) manhattan() int {
 
 func (d Day) Solve() {
 	// Parse input
-	sensors := parseInput(d.Dataset)
+	_, _, sensors := parseInput(d.Dataset)
 
-	// Sensor coverage
-	// coverage := coverage(sensors)
+	p1 := 2000000
+	m := make(map[loc]bool)
+	for _, s := range sensors {
+		y := loc{s.coord.x, p1}
+		diff := y.diff(s.coord)
 
-	//
-	sensors[0].contains(loc{4, 20})
-	fmt.Println("Point 4,20 is contained by %v\n", sensors[0])
+		// Add points overlap
+		if width := s.manhattan() - diff.y; width >= 0 {
+			// fmt.Printf("Sensor: %v, Dist: %d, Width: %d\n", s.coord, s.manhattan(), width)
+			for x := -width; x <= width; x++ {
+				l := loc{s.coord.x + x, p1}
+				m[l] = true
+			}
+		}
+	}
 
-	log.Printf("Answer part I: %d", 0)
+	for _, s := range sensors {
+		if _, ok := m[s.beacon]; ok {
+			delete(m, s.beacon)
+		}
+	}
+
+	log.Printf("Answer part I: %d", len(m))
 	log.Printf("Answer part II: %d", 0)
 }
 
-func parseInput(input io.ReadCloser) []sensor {
+func parseInput(input io.ReadCloser) (loc, loc, []sensor) {
 	buf := bufio.NewScanner(input)
 	defer input.Close()
+
+	var (
+		min = loc{math.MaxInt, math.MaxInt}
+		max = loc{math.MaxInt, math.MaxInt}
+	)
 
 	var sensors []sensor
 	for buf.Scan() {
@@ -88,27 +101,21 @@ func parseInput(input io.ReadCloser) []sensor {
 		fmt.Sscanf(l, "Sensor at x=%d, y=%d: closest beacon is at x=%d, y=%d", &c.x, &c.y, &b.x, &b.y)
 		s := sensor{c, b}
 
+		if c.x < min.x {
+			min.x = c.x
+		}
+		if c.y < min.y {
+			min.y = c.y
+		}
+		if c.x > max.x {
+			max.x = c.y
+		}
+		if c.y > max.y {
+			max.y = c.y
+		}
+
 		sensors = append(sensors, s)
 	}
 
-	return sensors
-}
-
-func coverage(sensors []sensor) []area {
-	var coverage []area
-
-	for _, sensor := range sensors {
-		dist := sensor.manhattan()
-		a := area{
-			loc{sensor.coord.x, sensor.coord.y},
-			loc{sensor.coord.x - dist, sensor.coord.y},
-			loc{sensor.coord.x + dist, sensor.coord.y},
-			loc{sensor.coord.x, sensor.coord.y - dist},
-			loc{sensor.coord.x, sensor.coord.y + dist},
-		}
-
-		coverage = append(coverage, a)
-	}
-
-	return coverage
+	return min, max, sensors
 }
